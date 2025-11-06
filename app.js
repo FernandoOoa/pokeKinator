@@ -13,9 +13,6 @@ const db = firebase.firestore();
 console.log("¡Firebase conectado y Firestore listo!");
 
 // --- 2. FUNCIÓN AYUDANTE ---
-/**
- * Convierte un string a formato Capitalizado (Ej: "pikachu" -> "Pikachu")
- */
 function capitalizar(str) {
   if (!str) return "";
   str = str.trim().toLowerCase();
@@ -23,11 +20,9 @@ function capitalizar(str) {
 }
 
 // --- 3. ALMACÉN DE ELEMENTOS DEL DOM ---
-// Guardaremos todos los elementos del DOM aquí para un acceso global
 const elems = {};
 
 // --- 4. ESTADO DEL JUEGO ---
-// Guardaremos el estado actual del juego aquí
 const gameState = {
   nodoActualId: "root",
   nodoActualData: null,
@@ -35,43 +30,29 @@ const gameState = {
 
 // --- 5. DEFINICIÓN DE FUNCIONES ---
 
-/**
- * Muestra la vista de Juego y (re)inicia el juego
- */
 function mostrarVistaJuego() {
   elems.vistaJuego.classList.add("activa");
   elems.vistaLista.classList.remove("activa");
-  
-  // Ocultamos todas las sub-vistas del juego
   elems.areaPregunta.style.display = "none";
   elems.areaRespuestas.style.display = "none";
   elems.areaAdivinanza.style.display = "none";
   elems.areaAprender.style.display = "none";
-
-  // Reiniciamos y cargamos el juego
   gameState.nodoActualId = "root";
   cargarNodo(gameState.nodoActualId);
 }
 
-/**
- * Muestra la vista de Lista Y CARGA LOS DATOS de Firestore
- */
 async function mostrarVistaLista() {
   elems.vistaLista.classList.add("activa");
   elems.vistaJuego.classList.remove("activa");
-
   elems.listaPokemonContainer.innerHTML = "<li>Cargando... 🌀</li>";
-
   try {
-    const snapshot = await db.collection("pokemonList").orderBy("nombre").get(); // Ordenamos por nombre
-    elems.listaPokemonContainer.innerHTML = ""; // Limpiamos "Cargando..."
-
+    const snapshot = await db.collection("pokemonList").orderBy("nombre").get();
+    elems.listaPokemonContainer.innerHTML = "";
     if (snapshot.empty) {
       elems.listaPokemonContainer.innerHTML =
         "<li>Aún no hay Pokémon aprendidos.</li>";
       return;
     }
-
     snapshot.forEach((doc) => {
       const pokemon = doc.data();
       const pokemonCard = document.createElement("div");
@@ -89,9 +70,6 @@ async function mostrarVistaLista() {
   }
 }
 
-/**
- * Carga un nodo (pregunta o Pokémon) desde Firestore
- */
 async function cargarNodo(idNodo) {
   console.log(`Cargando nodo: ${idNodo}`);
   try {
@@ -100,55 +78,41 @@ async function cargarNodo(idNodo) {
       alert("¡Error en el juego! No se encontró el nodo. Volviendo al inicio.");
       return mostrarVistaJuego();
     }
-
     gameState.nodoActualData = doc.data();
     gameState.nodoActualId = doc.id;
-
     renderizarNodo(gameState.nodoActualData);
   } catch (error) {
     console.error("Error al cargar nodo: ", error);
   }
 }
 
-/**
- * Muestra la pregunta o la adivinanza en pantalla
- */
 function renderizarNodo(data) {
-  // Ocultamos todas las áreas primero
   elems.areaAdivinanza.style.display = "none";
   elems.areaAprender.style.display = "none";
   elems.areaPregunta.style.display = "none";
   elems.areaRespuestas.style.display = "none";
   elems.imgAdivinanza.style.display = "none";
-
   if (data.type === "question") {
-    // Es una pregunta
     elems.textoPregunta.textContent = data.textoPregunta;
     elems.areaPregunta.style.display = "block";
     elems.areaRespuestas.style.display = "flex";
   } else if (data.type === "leaf") {
-    // Es una adivinanza
     elems.textoAdivinanza.textContent = data.pokemonName;
     elems.imgAdivinanza.src = data.imageUrl || "https://via.placeholder.com/96";
     elems.imgAdivinanza.style.display = "block";
-    elems.areaAdivinanza.style.display = "block"; // O 'flex' si se ajusta en CSS
+    elems.areaAdivinanza.style.display = "block";
   }
 }
 
-/**
- * Se activa al hacer clic en 'No, te equivocaste'
- */
 function manejarErrorAdivinanza() {
   elems.areaAdivinanza.style.display = "none";
   elems.areaAprender.style.display = "block";
   elems.inputPokemon.value = "";
   elems.inputPregunta.value = "";
-  elems.inputPokemon.focus(); // Damos foco al primer campo
+  elems.inputPokemon.focus();
 }
 
-/**
- * Se activa al enviar el formulario de aprendizaje
- */
+// --- *** ¡FUNCIÓN MODIFICADA! *** ---
 async function aprenderNuevoPokemon(event) {
   event.preventDefault();
   const nuevoPokemonNombre = capitalizar(elems.inputPokemon.value);
@@ -164,6 +128,7 @@ async function aprenderNuevoPokemon(event) {
 
   let nuevoPokemonImageUrl;
   try {
+    // 1. Consultar PokéAPI
     const response = await fetch(
       `https://pokeapi.co/api/v2/pokemon/${nuevoPokemonNombre.toLowerCase()}`
     );
@@ -171,10 +136,8 @@ async function aprenderNuevoPokemon(event) {
       throw new Error("Pokémon no encontrado en la Pokédex.");
     }
     const data = await response.json();
-    nuevoPokemonImageUrl = data.sprites.front_default;
-    if (!nuevoPokemonImageUrl) {
-      nuevoPokemonImageUrl = "https://via.placeholder.com/96"; // Placeholder
-    }
+    nuevoPokemonImageUrl =
+      data.sprites.front_default || "https://via.placeholder.com/96";
   } catch (error) {
     console.error("Error con PokéAPI:", error.message);
     alert(
@@ -182,9 +145,23 @@ async function aprenderNuevoPokemon(event) {
     );
     return mostrarVistaJuego();
   }
+  
+  // --- *** ¡NUEVO CÓDIGO AÑADIDO! *** ---
+  // 2. Comprobar si ya existe en la lista
+  let yaExisteEnLaLista = false;
+  try {
+    const listaQuery = await db.collection("pokemonList")
+                                .where("nombre", "==", nuevoPokemonNombre)
+                                .get();
+    yaExisteEnLaLista = !listaQuery.empty;
+  } catch (e) {
+    console.error("Error al comprobar duplicados: ", e);
+  }
+  // --- *** FIN DEL NUEVO CÓDIGO *** ---
 
   elems.textoPregunta.textContent = "Aprendiendo... 🧠";
 
+  // Preparar datos para la base de datos
   const pokemonViejoNombre = gameState.nodoActualData.pokemonName;
   const pokemonViejoImageUrl =
     gameState.nodoActualData.imageUrl || "https://via.placeholder.com/96";
@@ -202,20 +179,27 @@ async function aprenderNuevoPokemon(event) {
 
   const batch = db.batch();
 
-  // 1. Añadir a pokemonList
-  const listaRef = db.collection("pokemonList").doc();
-  batch.set(listaRef, {
-    nombre: nuevoPokemonNombre,
-    imageUrl: nuevoPokemonImageUrl,
-  });
+  // --- *** ¡LÓGICA MODIFICADA! *** ---
+  // 3. Añadir a pokemonList (¡SÓLO SI NO EXISTE!)
+  if (!yaExisteEnLaLista) {
+    const listaRef = db.collection("pokemonList").doc();
+    batch.set(listaRef, {
+      nombre: nuevoPokemonNombre,
+      imageUrl: nuevoPokemonImageUrl,
+    });
+    console.log(`Añadiendo ${nuevoPokemonNombre} a la lista.`);
+  } else {
+    console.log(`${nuevoPokemonNombre} ya existe en la lista, no se añade.`);
+  }
+  // --- *** FIN DE LA MODIFICACIÓN *** ---
 
-  // 2. Crear las dos nuevas hojas en gameTree
+  // 4. Crear las dos nuevas hojas en gameTree
   const hojaNuevaRef = db.collection("gameTree").doc();
   batch.set(hojaNuevaRef, nuevaHojaPokemonNuevo);
   const hojaViejaRef = db.collection("gameTree").doc();
   batch.set(hojaViejaRef, nuevaHojaPokemonViejo);
 
-  // 3. Actualizar el nodo actual para que sea una pregunta
+  // 5. Actualizar el nodo actual para que sea una pregunta
   const nodoActualRef = db.collection("gameTree").doc(gameState.nodoActualId);
   batch.update(nodoActualRef, {
     type: "question",
@@ -226,7 +210,7 @@ async function aprenderNuevoPokemon(event) {
     noNode: hojaViejaRef.id,
   });
 
-  // 4. Ejecutar todo
+  // 6. Ejecutar todo
   try {
     await batch.commit();
     console.log("¡El árbol se actualizó correctamente!");
@@ -238,21 +222,14 @@ async function aprenderNuevoPokemon(event) {
   }
 }
 
-/**
- * Se activa al hacer clic en '¡Sí, adivinaste!'
- */
 function manejarAcierto() {
   alert("¡Lo sabía! 😎");
-  mostrarVistaJuego(); // Reinicia el juego
+  mostrarVistaJuego();
 }
 
-/**
- * Se activa al responder Sí o No a una pregunta
- */
 function manejarRespuesta(respuesta) {
   if (!gameState.nodoActualData || gameState.nodoActualData.type !== "question")
     return;
-
   const proximoNodoId =
     respuesta === "si"
       ? gameState.nodoActualData.yesNode
@@ -261,12 +238,8 @@ function manejarRespuesta(respuesta) {
 }
 
 // --- 6. INICIALIZACIÓN DE LA APLICACIÓN ---
-/**
- * Se ejecuta cuando el DOM está listo.
- * Selecciona los elementos y asigna los 'event listeners'.
- */
 function init() {
-  // 1. Seleccionar elementos y guardarlos
+  // 1. Seleccionar elementos
   elems.btnJugar = document.getElementById("btnJugar");
   elems.btnLista = document.getElementById("btnLista");
   elems.vistaJuego = document.getElementById("vistaJuego");
@@ -293,13 +266,10 @@ function init() {
   // 2. Asignar 'event listeners'
   elems.btnJugar.addEventListener("click", mostrarVistaJuego);
   elems.btnLista.addEventListener("click", mostrarVistaLista);
-  
   elems.btnAdivinanzaSi.addEventListener("click", manejarAcierto);
   elems.btnAdivinanzaNo.addEventListener("click", manejarErrorAdivinanza);
-  
   elems.formAprender.addEventListener("submit", aprenderNuevoPokemon);
   elems.btnCancelarAprender.addEventListener("click", mostrarVistaJuego);
-  
   elems.btnSi.addEventListener("click", () => manejarRespuesta("si"));
   elems.btnNo.addEventListener("click", () => manejarRespuesta("no"));
 
@@ -307,5 +277,4 @@ function init() {
   mostrarVistaJuego();
 }
 
-// Iniciar la aplicación cuando el DOM esté listo
 document.addEventListener("DOMContentLoaded", init);
