@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Poké-Akinator</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header>
+      <h1>Poké-Akinator 🧠</h1>
+      <nav>
+        <button id="btnJugar">Jugar</button>
+        <button id="btnLista">Ver Lista de Pokémon</button>
+      </nav>
+    </header>
+
+    <main>
+      <section id="vistaJuego" class="vista activa">
+        <h2>¡Piensa en un Pokémon!</h2>
+
+        <div id="areaPregunta">
+          <p class="pregunta"></p>
+        </div>
+
+        <div id="areaRespuestas">
+          <button>Sí</button>
+          <button>No</button>
+        </div>
+
+        <div id="areaAdivinanza">
+          <img id="imgAdivinanza" src="" alt="Imagen del Pokémon" />
+          <p class="pregunta">¿Estás pensando en... <strong></strong>?</p>
+          <button id="btnAdivinanzaSi">¡Sí, adivinaste!</button>
+          <button id="btnAdivinanzaNo">No, te equivocaste</button>
+        </div>
+
+        <div id="areaAprender">
+          <p>¡Oh no! Ayúdame a aprender.</p>
+          <form id="formAprender">
+            <label for="inputPokemon">¿En qué Pokémon estabas pensando?</label>
+            <input type="text" id="inputPokemon" required />
+            <label for="inputPregunta"
+              >Escribe una pregunta que sea SÍ para tu Pokémon, pero NO para el
+              mío:</label
+            >
+            <textarea
+              id="inputPregunta"
+              rows="3"
+              placeholder="Ej: ¿Es de tipo Agua?"
+              required
+            ></textarea>
+            <button type="submit">Enseñar al juego</button>
+            <button type="button" id="btnCancelarAprender">Cancelar</button>
+          </form>
+        </div>
+      </section>
+
+      <section id="vistaLista" class="vista">
+        <h2>Lista de Pokémon Agregados</h2>
+        <p>Aquí aparecerá la lista de Pokémon que el juego ha aprendido.</p>
+        <div id="listaPokemon" class="pokemon-grid"></div>
+      </section>
+    </main>
+
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore-compat.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

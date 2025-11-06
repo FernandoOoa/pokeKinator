@@ -1,0 +1,331 @@
+/* ============================================= */
+/* 0. CONFIGURACIÓN GLOBAL (Reseteo)             */
+/* ============================================= */
+* {
+    box-sizing: border-box;
+}
+
+/* ============================================= */
+/* 1. ESTILOS BASE (Mobile-First)                */
+/* ============================================= */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f0f2f5;
+    color: #333;
+    margin: 0;
+    min-height: 100vh;
+}
+
+main {
+    width: 100%;
+    background-color: #ffffff;
+    overflow: hidden;
+}
+
+header {
+    text-align: center;
+    padding: 20px;
+    background-color: #ef5350;
+    /* Rojo Pokémon */
+    color: white;
+}
+
+header h1 {
+    margin: 0;
+    font-size: 1.8rem;
+}
+
+nav {
+    margin-top: 15px;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+nav button {
+    font-size: 0.9rem;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    background-color: #ffcb05;
+    /* Amarillo Pokémon */
+    color: #3b4cca;
+    /* Azul Pokémon */
+    font-weight: bold;
+    transition: background-color 0.2s;
+}
+
+nav button:hover {
+    background-color: #c7a008;
+}
+
+/* ============================================= */
+/* LÓGICA DE VISTAS (Pestañas)                   */
+/* ============================================= */
+.vista {
+    display: none;
+    padding: 20px;
+}
+
+.vista.activa {
+    display: block;
+}
+
+/* ============================================= */
+/* VISTA DE JUEGO (Móvil)                        */
+/* ============================================= */
+.pregunta {
+    font-size: 1.3rem;
+    font-weight: bold;
+    color: #3b4cca;
+    text-align: center;
+    margin-top: 0;
+    margin-bottom: 25px;
+    min-height: 1.5em;
+    /* Espacio para que no salte al cargar texto */
+}
+
+/* Ocultamos elementos dinámicos por defecto */
+#areaAdivinanza,
+#areaAprender,
+#imgAdivinanza {
+    display: none;
+}
+
+/* BOTONES DE RESPUESTA (SÍ/NO) */
+#areaRespuestas {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+#areaRespuestas button {
+    font-size: 1.1rem;
+    padding: 15px;
+    width: 100%;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    color: white;
+    font-weight: bold;
+}
+
+#areaRespuestas button:nth-child(1) {
+    background-color: #4caf50;
+    /* Verde "Sí" */
+}
+
+#areaRespuestas button:nth-child(2) {
+    background-color: #f44336;
+    /* Rojo "No" */
+}
+
+/* BOTONES DE ADIVINANZA (¡SÍ! / NO) */
+#areaAdivinanza {
+    text-align: center;
+    display: flex;
+    /* Se sobreescribirá a 'none' por defecto, pero se activa con JS */
+    flex-direction: column;
+    gap: 10px;
+}
+
+#areaAdivinanza button {
+    font-size: 1.1rem;
+    padding: 15px;
+    width: 100%;
+    margin: 0;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    color: white;
+    transition: background-color 0.2s;
+}
+
+#areaAdivinanza #btnAdivinanzaSi {
+    background-color: #4caf50;
+}
+
+#areaAdivinanza #btnAdivinanzaSi:hover {
+    background-color: #45a049;
+}
+
+#areaAdivinanza #btnAdivinanzaNo {
+    background-color: #f44336;
+}
+
+#areaAdivinanza #btnAdivinanzaNo:hover {
+    background-color: #e53935;
+}
+
+/* IMAGEN DE ADIVINANZA */
+#imgAdivinanza {
+    display: block;
+    /* Se sobreescribirá a 'none' por defecto */
+    margin: 0 auto 20px auto;
+    width: 120px;
+    height: 120px;
+    image-rendering: pixelated;
+}
+
+/* ============================================= */
+/* VISTA DE APRENDER (Móvil)                     */
+/* ============================================= */
+#areaAprender {
+    background-color: #f9f9f9;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+}
+
+#formAprender {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+#formAprender label {
+    font-weight: bold;
+    color: #555;
+}
+
+#formAprender input[type="text"],
+#formAprender textarea {
+    width: 100%;
+    padding: 10px;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+#formAprender button {
+    font-size: 1rem;
+    padding: 12px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    color: white;
+}
+
+#formAprender button[type="submit"] {
+    background-color: #4caf50;
+}
+
+#formAprender button[type="button"] {
+    background-color: #9e9e9e;
+}
+
+/* ============================================= */
+/* VISTA DE LISTA (Móvil)                        */
+/* ============================================= */
+.pokemon-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 15px;
+    justify-content: center;
+}
+
+.pokemon-card {
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 10px;
+    text-align: center;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.pokemon-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+.pokemon-card img {
+    width: 80px;
+    height: 80px;
+    image-rendering: pixelated;
+    margin-bottom: 8px;
+}
+
+.pokemon-card span {
+    font-size: 1rem;
+    font-weight: bold;
+    color: #3b4cca;
+}
+
+/* ============================================= */
+/* 2. MEDIA QUERY UNIFICADA (Pantallas grandes)  */
+/* ============================================= */
+@media (min-width: 550px) {
+
+    /* --- ESTILOS GENERALES DE DESKTOP --- */
+    body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+    }
+
+    main {
+        max-width: 600px;
+        border-radius: 10px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .vista {
+        padding: 30px;
+    }
+
+    header h1 {
+        font-size: 2.2rem;
+    }
+
+    .pregunta {
+        font-size: 1.5rem;
+    }
+
+    nav button {
+        font-size: 1rem;
+    }
+
+    /* --- VISTA DE JUEGO (DESKTOP) --- */
+    #areaRespuestas {
+        flex-direction: row;
+        justify-content: center;
+        gap: 15px;
+    }
+
+    #areaRespuestas button {
+        width: auto;
+        padding: 15px 30px;
+    }
+
+    #areaAdivinanza {
+        flex-direction: row;
+        justify-content: center;
+        gap: 15px;
+        align-items: center;
+        /* Centra botones con el texto */
+    }
+
+    #areaAdivinanza button {
+        width: auto;
+        padding: 12px 25px;
+    }
+
+    /* --- VISTA DE LISTA (DESKTOP) --- */
+    .pokemon-grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 20px;
+    }
+
+    .pokemon-card img {
+        width: 100px;
+        height: 100px;
+    }
+}
