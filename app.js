@@ -31,6 +31,7 @@ const gameState = {
 // --- 5. DEFINICIÓN DE FUNCIONES ---
 
 function mostrarVistaJuego() {
+  // ... (Esta función no cambia)
   elems.vistaJuego.classList.add("activa");
   elems.vistaLista.classList.remove("activa");
   elems.areaPregunta.style.display = "none";
@@ -41,6 +42,7 @@ function mostrarVistaJuego() {
   cargarNodo(gameState.nodoActualId);
 }
 
+// *** MODIFICADO: Añadido el 'addEventListener' a la tarjeta ***
 async function mostrarVistaLista() {
   elems.vistaLista.classList.add("activa");
   elems.vistaJuego.classList.remove("activa");
@@ -61,6 +63,14 @@ async function mostrarVistaLista() {
           <img src="${pokemon.imageUrl}" alt="${pokemon.nombre}">
           <span>${pokemon.nombre}</span>
         `;
+      
+      // --- ¡NUEVO EVENT LISTENER! ---
+      // Al hacer clic, se llama a la función para mostrar la ruta
+      pokemonCard.addEventListener("click", () =>
+        mostrarRutaPokemon(pokemon.nombre)
+      );
+      // --- FIN DEL NUEVO CÓDIGO ---
+
       elems.listaPokemonContainer.appendChild(pokemonCard);
     });
   } catch (error) {
@@ -70,7 +80,94 @@ async function mostrarVistaLista() {
   }
 }
 
+// --- *** ¡NUEVA FUNCIÓN AÑADIDA! *** ---
+/**
+ * Busca y muestra la ruta de preguntas hacia un Pokémon
+ * @param {string} pokemonNombre El nombre del Pokémon a buscar
+ */
+async function mostrarRutaPokemon(pokemonNombre) {
+  // 1. Mostrar el modal con un mensaje de carga
+  elems.modalTitulo.textContent = `Buscando camino a ${pokemonNombre}...`;
+  elems.modalListaRuta.innerHTML = "<li>Buscando... 🌀</li>";
+  elems.modalRuta.style.display = "block";
+
+  let path = []; // Aquí guardaremos los pasos (pregunta y respuesta)
+  let currentNodeId = null;
+
+  try {
+    // 2. Encontrar el nodo "hoja" de este Pokémon
+    const leafQuery = await db.collection("gameTree")
+                              .where("type", "==", "leaf")
+                              .where("pokemonName", "==", pokemonNombre)
+                              .get();
+    
+    if (leafQuery.empty) {
+      throw new Error("No se encontró la hoja de este Pokémon en el árbol.");
+    }
+    
+    // Asumimos que no hay nombres duplicados en las hojas
+    currentNodeId = leafQuery.docs[0].id; 
+
+    // 3. Subir por el árbol (haciendo consultas) hasta llegar a 'root'
+    while (currentNodeId !== "root") {
+      let parentQuery;
+      let answer;
+
+      // Buscar si este nodo es un "yesNode" de alguien
+      parentQuery = await db.collection("gameTree")
+                            .where("yesNode", "==", currentNodeId)
+                            .get();
+      
+      if (!parentQuery.empty) {
+        answer = "Sí";
+      } else {
+        // Si no, buscar si es un "noNode" de alguien
+        parentQuery = await db.collection("gameTree")
+                              .where("noNode", "==", currentNodeId)
+                              .get();
+        if (!parentQuery.empty) {
+          answer = "No";
+        } else {
+          // Si no es ninguno, el árbol está roto o llegamos al final
+          throw new Error("No se pudo encontrar el nodo padre.");
+        }
+      }
+
+      // 4. Guardar el paso y prepararse para la siguiente vuelta
+      const parentDoc = parentQuery.docs[0];
+      path.push({
+        question: parentDoc.data().textoPregunta,
+        answer: answer,
+      });
+      currentNodeId = parentDoc.id; // Subimos al padre
+    }
+
+    // 5. Invertir el array (porque lo construimos de abajo hacia arriba)
+    path.reverse();
+
+    // 6. Mostrar el resultado en el modal
+    elems.modalTitulo.textContent = `Camino a ${pokemonNombre}`;
+    if (path.length === 0) {
+      elems.modalListaRuta.innerHTML = "<li>Es el Pokémon raíz. No hay preguntas.</li>";
+    } else {
+      elems.modalListaRuta.innerHTML = path
+        .map(
+          (step) =>
+            `<li>${step.question} <strong>Respuesta: ${step.answer}</strong></li>`
+        )
+        .join("");
+    }
+  } catch (error) {
+    console.error("Error al buscar la ruta:", error);
+    elems.modalTitulo.textContent = "Error";
+    elems.modalListaRuta.innerHTML = `<li>${error.message}</li>`;
+  }
+}
+
+// ... (El resto de funciones: cargarNodo, renderizarNodo, etc. no cambian) ...
+
 async function cargarNodo(idNodo) {
+  // ... (función sin cambios) ...
   console.log(`Cargando nodo: ${idNodo}`);
   try {
     const doc = await db.collection("gameTree").doc(idNodo).get();
@@ -87,6 +184,7 @@ async function cargarNodo(idNodo) {
 }
 
 function renderizarNodo(data) {
+  // ... (función sin cambios) ...
   elems.areaAdivinanza.style.display = "none";
   elems.areaAprender.style.display = "none";
   elems.areaPregunta.style.display = "none";
@@ -105,6 +203,7 @@ function renderizarNodo(data) {
 }
 
 function manejarErrorAdivinanza() {
+  // ... (función sin cambios) ...
   elems.areaAdivinanza.style.display = "none";
   elems.areaAprender.style.display = "block";
   elems.inputPokemon.value = "";
@@ -112,23 +211,19 @@ function manejarErrorAdivinanza() {
   elems.inputPokemon.focus();
 }
 
-// --- *** ¡FUNCIÓN MODIFICADA! *** ---
 async function aprenderNuevoPokemon(event) {
+  // ... (función sin cambios) ...
   event.preventDefault();
   const nuevoPokemonNombre = capitalizar(elems.inputPokemon.value);
   const nuevaPreguntaTexto = elems.inputPregunta.value.trim();
-
   if (!nuevoPokemonNombre || !nuevaPreguntaTexto) {
     return alert("Por favor, completa todos los campos.");
   }
-
   elems.areaAprender.style.display = "none";
   elems.areaPregunta.style.display = "block";
   elems.textoPregunta.textContent = "Consultando la Pokédex... 🌀";
-
   let nuevoPokemonImageUrl;
   try {
-    // 1. Consultar PokéAPI
     const response = await fetch(
       `https://pokeapi.co/api/v2/pokemon/${nuevoPokemonNombre.toLowerCase()}`
     );
@@ -145,9 +240,6 @@ async function aprenderNuevoPokemon(event) {
     );
     return mostrarVistaJuego();
   }
-  
-  // --- *** ¡NUEVO CÓDIGO AÑADIDO! *** ---
-  // 2. Comprobar si ya existe en la lista
   let yaExisteEnLaLista = false;
   try {
     const listaQuery = await db.collection("pokemonList")
@@ -157,15 +249,10 @@ async function aprenderNuevoPokemon(event) {
   } catch (e) {
     console.error("Error al comprobar duplicados: ", e);
   }
-  // --- *** FIN DEL NUEVO CÓDIGO *** ---
-
   elems.textoPregunta.textContent = "Aprendiendo... 🧠";
-
-  // Preparar datos para la base de datos
   const pokemonViejoNombre = gameState.nodoActualData.pokemonName;
   const pokemonViejoImageUrl =
     gameState.nodoActualData.imageUrl || "https://via.placeholder.com/96";
-
   const nuevaHojaPokemonNuevo = {
     type: "leaf",
     pokemonName: nuevoPokemonNombre,
@@ -176,11 +263,7 @@ async function aprenderNuevoPokemon(event) {
     pokemonName: pokemonViejoNombre,
     imageUrl: pokemonViejoImageUrl,
   };
-
   const batch = db.batch();
-
-  // --- *** ¡LÓGICA MODIFICADA! *** ---
-  // 3. Añadir a pokemonList (¡SÓLO SI NO EXISTE!)
   if (!yaExisteEnLaLista) {
     const listaRef = db.collection("pokemonList").doc();
     batch.set(listaRef, {
@@ -191,15 +274,10 @@ async function aprenderNuevoPokemon(event) {
   } else {
     console.log(`${nuevoPokemonNombre} ya existe en la lista, no se añade.`);
   }
-  // --- *** FIN DE LA MODIFICACIÓN *** ---
-
-  // 4. Crear las dos nuevas hojas en gameTree
   const hojaNuevaRef = db.collection("gameTree").doc();
   batch.set(hojaNuevaRef, nuevaHojaPokemonNuevo);
   const hojaViejaRef = db.collection("gameTree").doc();
   batch.set(hojaViejaRef, nuevaHojaPokemonViejo);
-
-  // 5. Actualizar el nodo actual para que sea una pregunta
   const nodoActualRef = db.collection("gameTree").doc(gameState.nodoActualId);
   batch.update(nodoActualRef, {
     type: "question",
@@ -209,8 +287,6 @@ async function aprenderNuevoPokemon(event) {
     yesNode: hojaNuevaRef.id,
     noNode: hojaViejaRef.id,
   });
-
-  // 6. Ejecutar todo
   try {
     await batch.commit();
     console.log("¡El árbol se actualizó correctamente!");
@@ -223,11 +299,13 @@ async function aprenderNuevoPokemon(event) {
 }
 
 function manejarAcierto() {
+  // ... (función sin cambios) ...
   alert("¡Lo sabía! 😎");
   mostrarVistaJuego();
 }
 
 function manejarRespuesta(respuesta) {
+  // ... (función sin cambios) ...
   if (!gameState.nodoActualData || gameState.nodoActualData.type !== "question")
     return;
   const proximoNodoId =
@@ -238,8 +316,10 @@ function manejarRespuesta(respuesta) {
 }
 
 // --- 6. INICIALIZACIÓN DE LA APLICACIÓN ---
+
+// *** MODIFICADO: Añadidos los elementos del modal ***
 function init() {
-  // 1. Seleccionar elementos
+  // 1. Seleccionar elementos y guardarlos
   elems.btnJugar = document.getElementById("btnJugar");
   elems.btnLista = document.getElementById("btnLista");
   elems.vistaJuego = document.getElementById("vistaJuego");
@@ -263,6 +343,13 @@ function init() {
   elems.inputPregunta = document.getElementById("inputPregunta");
   elems.btnCancelarAprender = document.getElementById("btnCancelarAprender");
 
+  // --- ¡NUEVOS ELEMENTOS DEL MODAL! ---
+  elems.modalRuta = document.getElementById("modalRuta");
+  elems.btnCerrarModal = document.getElementById("btnCerrarModal");
+  elems.modalTitulo = document.getElementById("modalTitulo");
+  elems.modalListaRuta = document.getElementById("modalListaRuta");
+  // --- FIN DE NUEVOS ELEMENTOS ---
+
   // 2. Asignar 'event listeners'
   elems.btnJugar.addEventListener("click", mostrarVistaJuego);
   elems.btnLista.addEventListener("click", mostrarVistaLista);
@@ -272,9 +359,21 @@ function init() {
   elems.btnCancelarAprender.addEventListener("click", mostrarVistaJuego);
   elems.btnSi.addEventListener("click", () => manejarRespuesta("si"));
   elems.btnNo.addEventListener("click", () => manejarRespuesta("no"));
+  
+  // --- ¡NUEVOS LISTENERS DEL MODAL! ---
+  const cerrarModal = () => { elems.modalRuta.style.display = "none"; };
+  elems.btnCerrarModal.addEventListener("click", cerrarModal);
+  elems.modalRuta.addEventListener("click", (event) => {
+    // Cierra el modal si se hace clic en el fondo oscuro
+    if (event.target === elems.modalRuta) {
+      cerrarModal();
+    }
+  });
+  // --- FIN DE NUEVOS LISTENERS ---
 
   // 3. Carga inicial
   mostrarVistaJuego();
 }
 
+// Iniciar la aplicación cuando el DOM esté listo
 document.addEventListener("DOMContentLoaded", init);

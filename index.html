@@ -61,6 +61,15 @@
         <p>Aquí aparecerá la lista de Pokémon que el juego ha aprendido.</p>
         <div id="listaPokemon" class="pokemon-grid"></div>
       </section>
+      <section id="vistaLista" class="vista"></section>
+
+      <div id="modalRuta" class="modal-overlay">
+        <div class="modal-content">
+          <span id="btnCerrarModal" class="modal-close">&times;</span>
+          <h3 id="modalTitulo">Camino a Pokémon</h3>
+          <ul id="modalListaRuta"></ul>
+        </div>
+      </div>
     </main>
 
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
