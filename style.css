@@ -1,13 +1,9 @@
-/* ============================================= */
-/* 0. CONFIGURACIÓN GLOBAL (Reseteo)             */
-/* ============================================= */
+/* ===== 0. CONFIGURACIÓN GLOBAL ===== */
 * {
     box-sizing: border-box;
 }
 
-/* ============================================= */
-/* 1. ESTILOS BASE (Mobile-First)                */
-/* ============================================= */
+/* ===== 1. ESTILOS BASE ===== */
 body {
     font-family: Arial, sans-serif;
     background-color: #f0f2f5;
@@ -26,7 +22,6 @@ header {
     text-align: center;
     padding: 20px;
     background-color: #ef5350;
-    /* Rojo Pokémon */
     color: white;
 }
 
@@ -49,9 +44,7 @@ nav button {
     border-radius: 5px;
     cursor: pointer;
     background-color: #ffcb05;
-    /* Amarillo Pokémon */
     color: #3b4cca;
-    /* Azul Pokémon */
     font-weight: bold;
     transition: background-color 0.2s;
 }
@@ -60,9 +53,7 @@ nav button:hover {
     background-color: #c7a008;
 }
 
-/* ============================================= */
-/* LÓGICA DE VISTAS (Pestañas)                   */
-/* ============================================= */
+/* ===== 2. LÓGICA DE VISTAS ===== */
 .vista {
     display: none;
     padding: 20px;
@@ -72,9 +63,7 @@ nav button:hover {
     display: block;
 }
 
-/* ============================================= */
-/* VISTA DE JUEGO (Móvil)                        */
-/* ============================================= */
+/* ===== 3. VISTA DE JUEGO ===== */
 .pregunta {
     font-size: 1.3rem;
     font-weight: bold;
@@ -83,17 +72,14 @@ nav button:hover {
     margin-top: 0;
     margin-bottom: 25px;
     min-height: 1.5em;
-    /* Espacio para que no salte al cargar texto */
 }
 
-/* Ocultamos elementos dinámicos por defecto */
 #areaAdivinanza,
 #areaAprender,
 #imgAdivinanza {
     display: none;
 }
 
-/* BOTONES DE RESPUESTA (SÍ/NO) */
 #areaRespuestas {
     display: flex;
     flex-direction: column;
@@ -113,19 +99,15 @@ nav button:hover {
 
 #areaRespuestas button:nth-child(1) {
     background-color: #4caf50;
-    /* Verde "Sí" */
 }
 
 #areaRespuestas button:nth-child(2) {
     background-color: #f44336;
-    /* Rojo "No" */
 }
 
-/* BOTONES DE ADIVINANZA (¡SÍ! / NO) */
 #areaAdivinanza {
     text-align: center;
     display: flex;
-    /* Se sobreescribirá a 'none' por defecto, pero se activa con JS */
     flex-direction: column;
     gap: 10px;
 }
@@ -159,19 +141,15 @@ nav button:hover {
     background-color: #e53935;
 }
 
-/* IMAGEN DE ADIVINANZA */
 #imgAdivinanza {
     display: block;
-    /* Se sobreescribirá a 'none' por defecto */
     margin: 0 auto 20px auto;
     width: 120px;
     height: 120px;
     image-rendering: pixelated;
 }
 
-/* ============================================= */
-/* VISTA DE APRENDER (Móvil)                     */
-/* ============================================= */
+/* ===== 4. VISTA DE APRENDER ===== */
 #areaAprender {
     background-color: #f9f9f9;
     padding: 20px;
@@ -217,9 +195,7 @@ nav button:hover {
     background-color: #9e9e9e;
 }
 
-/* ============================================= */
-/* VISTA DE LISTA (Móvil)                        */
-/* ============================================= */
+/* ===== 5. VISTA DE LISTA ===== */
 .pokemon-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
@@ -258,12 +234,8 @@ nav button:hover {
     color: #3b4cca;
 }
 
-/* ============================================= */
-/* 2. MEDIA QUERY UNIFICADA (Pantallas grandes)  */
-/* ============================================= */
+/* ===== 6. MEDIA QUERY (Pantallas grandes) ===== */
 @media (min-width: 550px) {
-
-    /* --- ESTILOS GENERALES DE DESKTOP --- */
     body {
         display: flex;
         justify-content: center;
@@ -293,7 +265,6 @@ nav button:hover {
         font-size: 1rem;
     }
 
-    /* --- VISTA DE JUEGO (DESKTOP) --- */
     #areaRespuestas {
         flex-direction: row;
         justify-content: center;
@@ -310,7 +281,6 @@ nav button:hover {
         justify-content: center;
         gap: 15px;
         align-items: center;
-        /* Centra botones con el texto */
     }
 
     #areaAdivinanza button {
@@ -318,7 +288,6 @@ nav button:hover {
         padding: 12px 25px;
     }
 
-    /* --- VISTA DE LISTA (DESKTOP) --- */
     .pokemon-grid {
         grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
         gap: 20px;
@@ -330,14 +299,10 @@ nav button:hover {
     }
 }
 
-/* ============================================= */
-/* ESTILOS PARA EL MODAL DE RUTA                 */
-/* ============================================= */
+/* ===== 7. MODAL DE RUTA ===== */
 .modal-overlay {
     display: none;
-    /* Oculto por defecto */
     position: fixed;
-    /* Se queda fijo en la pantalla */
     z-index: 1000;
     left: 0;
     top: 0;
@@ -345,9 +310,7 @@ nav button:hover {
     height: 100%;
     overflow: auto;
     background-color: rgba(0, 0, 0, 0.5);
-    /* Fondo oscuro semitransparente */
     padding-top: 60px;
-    /* Espacio arriba */
 }
 
 .modal-content {
@@ -356,9 +319,7 @@ nav button:hover {
     padding: 20px;
     border: 1px solid #888;
     width: 90%;
-    /* Ancho en móvil */
     max-width: 500px;
-    /* Ancho máximo en desktop */
     border-radius: 10px;
     position: relative;
 }
@@ -396,10 +357,8 @@ nav button:hover {
     margin-bottom: 8px;
     border-radius: 5px;
     border-left: 5px solid #ffcb05;
-    /* Borde amarillo */
 }
 
 #modalListaRuta li strong {
     color: #ef5350;
-    /* Rojo Pokémon */
 }
